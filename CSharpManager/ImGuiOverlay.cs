@@ -15,11 +15,27 @@ namespace CSharpManager
         private bool isDrawingUI = true;
         private bool isDrawingModsUI = true;
         private bool showMouse = true;
+        private GameConsole gameConsole { get; }
         public bool IsDrawingUI { get => isDrawingUI; }
         public bool IsDrawingModsUI { get => isDrawingUI && isDrawingModsUI; }
 
         public ImGuiOverlay() : base()
         {
+            gameConsole = new();
+
+            gameConsole.RegisterCommand("help", args =>
+            {
+                if (args.Length == 0)
+                {
+                    return;
+                }
+                if (args[0] == "close")
+                {
+                    gameConsole.ToggleConsole();
+                    return;
+                }
+                gameConsole.Log($"help: show help message {args[0]}");
+            });
         }
 
         protected override Task PostInitialized()
@@ -67,6 +83,13 @@ namespace CSharpManager
                     ImGui.SetNextItemOpen(true, ImGuiCond.Once);
                     isDrawingModsUI = ImGui.TreeNode("Mods UI");
                 }
+                // 渲染控制台
+                // 检测是否按下~键
+                if (ImGui.IsKeyPressed(ImGuiKey.F5))
+                {
+                    gameConsole.ToggleConsole();
+                }
+                gameConsole.Render(); // 渲染控制台
                 var mods = CSharpModManager.Instance.LoadedMods;
                 lock (mods)
                 {
